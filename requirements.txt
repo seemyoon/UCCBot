@@ -1,0 +1,10 @@
+uvicorn[standard]
+python-dotenv
+pandas
+langchain
+langchain-community
+langchain-openai
+openai
+chromadb
+pypdf
+tqdm
