@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: ucc-backend-dev
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      # Mount source code for live reload
+      - ./backend:/app/backend
+      - ./config.py:/app/config.py
+      - ./vector_db.py:/app/vector_db.py
+      - ./schemas:/app/schemas
+      - ./chroma_db:/app/chroma_db
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - ucc-network
+
+  frontend:
+    image: node:18-alpine
+    container_name: ucc-frontend-dev
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm start
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - REACT_APP_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - ucc-network
+
+networks:
+  ucc-network:
+    driver: bridge
+```
+
+## 7. `..dockerignore` (root directory)
+```
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info
+dist/
+build/
+.pytest_cache
+.coverage
+htmlcov/
+
+# Node
+node_modules/
+npm-debug.log
+frontend/build/
+
+# Environment
+.env
+.env.local
+.venv
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# ML
+ml/
+
+# Misc
+.DS_Store
+*.log
+test_queries.txt

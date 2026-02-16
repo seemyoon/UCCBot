@@ -2,6 +2,7 @@
 /test_queries.txt
 /.env
 /uv.lock
-/research.ipynb
 /chroma_db/
 /frontend/package-lock.json
+/ml/research.ipynb
+/docker_comp.com.txt

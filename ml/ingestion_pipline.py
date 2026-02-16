@@ -1,10 +1,10 @@
 import config
-from embedder import Embedder
+from ml.embedder import Embedder
 from preprocessing.openai_chat_processor import OpenAIChatProcessor
 from preprocessing.legal_text_patterns import LegalTextPatterns
 from preprocessing.text_normalizer import TextNormalizer
 from preprocessing.text_processor import TextProcessor
-from utils import Utils
+from ml.utils import Utils
 from vector_db import VectorDB
 
 

@@ -1,12 +1,12 @@
 import uuid
 
+import uvicorn
 from fastapi import FastAPI, HTTPException
 from starlette.middleware.cors import CORSMiddleware
+from starlette.responses import StreamingResponse
 
-from rag.rag_pipeline import RAGPipline
-from schemas import QueryResponse, QueryRequest, SessionResponse
-
-import uvicorn
+from backend.rag.rag_pipeline import RAGPipline
+from backend.schemas import QueryResponse, QueryRequest, SessionResponse
 
 app = FastAPI(
     title="UCC API",
@@ -15,7 +15,11 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost",
+        "http://frontend",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -53,6 +57,34 @@ async def query(request: QueryRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/query/stream")
+async def stream_query(request: QueryRequest):
+    try:
+        session_id = request.session_id or str(uuid.uuid4())
+
+        if session_id not in rag_sessions:
+            rag_sessions[session_id] = RAGPipline()
+
+        rag = rag_sessions[session_id]
+
+        async def token_generator():
+            async for token in rag.stream_rag_pipeline(request.query):
+                yield token
+
+        return StreamingResponse(
+            token_generator(),
+            media_type="text/plain",
+            headers={
+                "X-Session-ID": session_id,
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no"
+            }
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/session/new", response_model=SessionResponse)
 async def create_session():
     session_id = str(uuid.uuid4())
@@ -78,9 +110,9 @@ async def delete_session(session_id: str):
         raise HTTPException(status_code=404, detail="Session not found")
 
 
-@app.post("/session/{session_id}/clear}", response_model=SessionResponse)
+@app.post("/session/{session_id}/clear", response_model=SessionResponse)  # ✅ Removed extra }
 async def clear_session(session_id: str):
-    if session_id in rag_sessions:
+    if session_id not in rag_sessions:
         raise HTTPException(status_code=404, detail="Session not found")
 
     rag_sessions[session_id].clear_history()

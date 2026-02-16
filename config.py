@@ -15,7 +15,7 @@ COLLECTION_NAME = "ucc_collection"
 NUMBER_OF_RESULTS_TO_RETURN = 5
 
 EMBEDDING_MODEL = "text-embedding-3-small"  # or "text-embedding-3-large"
-GPT_MODEL = "gpt-5"
+GPT_MODEL = 'gpt-5-mini'  # "gpt-5"
 
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY') or ValueError("OPENAI_API_KEY is not set in environment variables.")
 

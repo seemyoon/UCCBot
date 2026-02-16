@@ -5,7 +5,7 @@ from langchain_openai import ChatOpenAI
 from pydantic import SecretStr
 
 import config
-from schemas import LegalFooterModel
+from ml.schemas import LegalFooterModel
 
 
 class OpenAIChatProcessor:
@@ -30,5 +30,3 @@ class OpenAIChatProcessor:
         reformulate_footer_txt = self.parser.parse(response.generations[0][0].text)
 
         return reformulate_footer_txt.model_dump()
-
-

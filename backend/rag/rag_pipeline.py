@@ -5,7 +5,7 @@ from langchain_openai import ChatOpenAI
 from pydantic import SecretStr
 
 import config
-from rag.context_builder import ContextBuilder
+from backend.rag.context_builder import ContextBuilder
 from vector_db import VectorDB
 
 
@@ -21,6 +21,13 @@ class RAGPipline:
             model=self.model_name,
             api_key=self.api_key,
             temperature=0,
+        )
+
+        self.llm_stream = ChatOpenAI(
+            model=self.model_name,
+            api_key=self.api_key,
+            temperature=0,
+            streaming=True
         )
 
         self.chat_history = []
@@ -49,7 +56,10 @@ class RAGPipline:
         self.chain = self.prompt | self.llm | StrOutputParser()
 
     def run_rag_pipline(self, query):
-        retrieve_results_from_db = self.vectordb.similarity_search(query, self.number_of_results_to_return)
+        retrieve_results_from_db = self.vectordb.similarity_search(
+            query,
+            self.number_of_results_to_return
+        )
 
         context = self.context_builder.build(retrieve_results_from_db)
 
@@ -66,6 +76,32 @@ class RAGPipline:
             self.chat_history = self.chat_history[-10:]
 
         return response
+
+    async def stream_rag_pipeline(self, query):
+        retrieved_chunks = self.vectordb.similarity_search(
+            query,
+            self.number_of_results_to_return
+        )
+
+        context = self.context_builder.build(retrieved_chunks)
+
+        messages = self.prompt.format_messages(
+            context=context,
+            query=query,
+            chat_history=self.chat_history
+        )
+
+        full_response = ""
+        async for chunk in self.llm.astream(messages):
+            content = chunk.content
+            full_response += content
+            yield content
+
+        self.chat_history.append(HumanMessage(content=query))
+        self.chat_history.append(AIMessage(content=full_response))
+
+        if len(self.chat_history) > 10:
+            self.chat_history = self.chat_history[-10:]
 
     def clear_history(self):
         self.chat_history = []
