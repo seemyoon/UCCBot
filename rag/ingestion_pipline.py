@@ -1,6 +1,6 @@
 import config
 from embedder import Embedder
-from open_ai.openai_chat_processor import OpenAIChatProcessor
+from preprocessing.openai_chat_processor import OpenAIChatProcessor
 from preprocessing.legal_text_patterns import LegalTextPatterns
 from preprocessing.text_normalizer import TextNormalizer
 from preprocessing.text_processor import TextProcessor
